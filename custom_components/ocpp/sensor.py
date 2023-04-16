@@ -34,7 +34,7 @@ from .enums import HAChargerDetails, HAChargerSession, HAChargerStatuses
 class OcppSensorDescription(SensorEntityDescription):
     """Class to describe a Sensor entity."""
 
-    scale: int = 1  # used for rounding metric
+    scale: int = 3  # used for rounding metric
     metric: str | None = None
 
 
@@ -163,8 +163,8 @@ class ChargePointMetric(RestoreSensor, SensorEntity):
             Measurand.rpm,
         ] or self.metric.lower().startswith("frequency"):
             device_class = SensorDeviceClass.FREQUENCY
-        elif self.metric.lower().startswith(tuple(["power.a", "power.o", "power.r"])):
-            device_class = SensorDeviceClass.POWER
+        elif self.metric.lower().startswith("power"):
+            device_class = SensorDeviceClass.ENERGY
         elif self.metric.lower().startswith("temperature."):
             device_class = SensorDeviceClass.TEMPERATURE
         elif self.metric.lower().startswith("timestamp.") or self.metric in [
@@ -181,8 +181,6 @@ class ChargePointMetric(RestoreSensor, SensorEntity):
     def native_value(self):
         """Return the state of the sensor, rounding if a number."""
         value = self.central_system.get_metric(self.cp_id, self.metric)
-        if isinstance(value, float):
-            value = round(value, self.entity_description.scale)
         if value is not None:
             self._attr_native_value = value
         return self._attr_native_value

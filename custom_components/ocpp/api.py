@@ -808,6 +808,9 @@ class ChargePoint(cp):
         If the key has a different value a ChangeConfiguration request is issued.
 
         """
+        if "WebSocketPingInterval" in key:
+            return
+
         req = call.GetConfigurationPayload(key=[key])
 
         resp = await self.call(req)
@@ -817,15 +820,16 @@ class ChargePoint(cp):
                 _LOGGER.warning("%s is unknown (not supported)", key)
                 return
 
-        for key_value in resp.configuration_key:
-            # If the key already has the targeted value we don't need to set
-            # it.
-            if key_value[om.key.value] == key and key_value[om.value.value] == value:
-                return
+        if resp.configuration_key:
+            for key_value in resp.configuration_key:
+                # If the key already has the targeted value we don't need to set
+                # it.
+                if key_value[om.key.value] == key and key_value[om.value.value] == value:
+                    return
 
-            if key_value.get(om.readonly.name, False):
-                _LOGGER.warning("%s is a read only setting", key)
-                await self.notify_ha(f"Warning: {key} is read-only")
+                if key_value.get(om.readonly.name, False):
+                    _LOGGER.warning("%s is a read only setting", key)
+                    await self.notify_ha(f"Warning: {key} is read-only")
 
         req = call.ChangeConfigurationPayload(key=key, value=value)
 
@@ -1141,7 +1145,7 @@ class ChargePoint(cp):
         """Handle a boot notification."""
         resp = call_result.BootNotificationPayload(
             current_time=datetime.now(tz=timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
-            interval=3600,
+            interval=300,
             status=RegistrationStatus.accepted.value,
         )
         self.received_boot_notification = True
