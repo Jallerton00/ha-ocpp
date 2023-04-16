@@ -1085,6 +1085,12 @@ class ChargePoint(cp):
                 location = sampled_value.get(om.location.value, None)
                 context = sampled_value.get(om.context.value, None)
 
+                if "Power.Active.Import" in measurand:
+                    if "Inlet" not in location:
+                        break
+
+                # _LOGGER.debug("Processing %s.%s", measurand, location)
+
                 if len(sampled_value.keys()) == 1:  # Backwards compatibility
                     measurand = DEFAULT_MEASURAND
                     unit = DEFAULT_ENERGY_UNIT
