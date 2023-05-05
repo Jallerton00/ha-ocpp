@@ -1084,35 +1084,34 @@ class ChargePoint(cp):
                 phase = sampled_value.get(om.phase.value, None)
                 location = sampled_value.get(om.location.value, None)
                 context = sampled_value.get(om.context.value, None)
+                
 
-                if "Power.Active.Import" in measurand:
-                    if "Inlet" not in location:
-                        break
+                if not ("Power.Active.Import" in measurand and "Inlet" not in location):
 
-                # _LOGGER.debug("Processing %s.%s", measurand, location)
+                    # _LOGGER.debug("Processing %s.%s", measurand, location)
 
-                if len(sampled_value.keys()) == 1:  # Backwards compatibility
-                    measurand = DEFAULT_MEASURAND
-                    unit = DEFAULT_ENERGY_UNIT
+                    if len(sampled_value.keys()) == 1:  # Backwards compatibility
+                        measurand = DEFAULT_MEASURAND
+                        unit = DEFAULT_ENERGY_UNIT
 
-                if phase is None:
-                    if unit == DEFAULT_POWER_UNIT:
-                        self._metrics[measurand].value = float(value) / 1000
-                        self._metrics[measurand].unit = HA_POWER_UNIT
-                    elif unit == DEFAULT_ENERGY_UNIT:
-                        if transaction_matches:
+                    if phase is None:
+                        if unit == DEFAULT_POWER_UNIT:
                             self._metrics[measurand].value = float(value) / 1000
-                            self._metrics[measurand].unit = HA_ENERGY_UNIT
-                    else:
-                        self._metrics[measurand].value = float(value)
-                        self._metrics[measurand].unit = unit
-                    if location is not None:
-                        self._metrics[measurand].extra_attr[
-                            om.location.value
-                        ] = location
-                    if context is not None:
-                        self._metrics[measurand].extra_attr[om.context.value] = context
-                    processed_keys.append(idx)
+                            self._metrics[measurand].unit = HA_POWER_UNIT
+                        elif unit == DEFAULT_ENERGY_UNIT:
+                            if transaction_matches:
+                                self._metrics[measurand].value = float(value) / 1000
+                                self._metrics[measurand].unit = HA_ENERGY_UNIT
+                        else:
+                            self._metrics[measurand].value = float(value)
+                            self._metrics[measurand].unit = unit
+                        if location is not None:
+                            self._metrics[measurand].extra_attr[
+                                om.location.value
+                            ] = location
+                        if context is not None:
+                            self._metrics[measurand].extra_attr[om.context.value] = context
+                        processed_keys.append(idx)
             for idx in sorted(processed_keys, reverse=True):
                 unprocessed.pop(idx)
             # _LOGGER.debug("Meter data not yet processed: %s", unprocessed)
